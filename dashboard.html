@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0C0E0A" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Command Center</title>
+<style>
+  :root{
+    --bg:#0C0E0A; --card:#131510; --cardAlt:#181B14; --border:#252820;
+    --lime:#AAFF3A; --limeDim:#7ACC1E; --orange:#FF7A1A; --red:#FF3A3A;
+    --text:#E8EDF0; --muted:#6B7A5A; --dim:#2E3828;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{padding-bottom:84px;}
+  .wrap{max-width:520px; margin:0 auto; padding:16px 14px 0;}
+  .topbar{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
+  .topbar h1{font-size:20px; font-weight:900; margin:0; letter-spacing:-0.5px;}
+  .topbar .date{font-size:11px; color:var(--muted); font-weight:700;}
+  .accent{color:var(--lime);}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:12px;}
+  .card.alt{background:var(--cardAlt);}
+  .label{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:6px;}
+  .big{font-size:30px; font-weight:900; letter-spacing:-1px;}
+  .sub{font-size:13px; color:var(--muted); font-weight:600;}
+  .pos{color:var(--lime);} .neg{color:var(--red);} .warn{color:var(--orange);}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+
+  /* views */
+  .view{display:none;} .view.active{display:block;}
+
+  /* net worth header card */
+  .nw{background:linear-gradient(160deg,#171a12,#10120d); border:1px solid var(--border);}
+  .nw .big{font-size:34px;}
+  .pill{display:inline-block; font-size:12px; font-weight:800; padding:3px 9px; border-radius:999px;}
+  .pill.pos{background:rgba(170,255,58,.13);} .pill.neg{background:rgba(255,58,58,.13);}
+
+  /* focus */
+  .lane{border:1px solid var(--limeDim); background:rgba(170,255,58,.06);}
+  .lane .body{font-size:15px; font-weight:700; line-height:1.4;}
+  .editbtn{font-size:11px; color:var(--muted); background:none; border:none; font-weight:700; padding:4px;}
+
+  /* account block */
+  .acct{margin-bottom:10px;}
+  .acct:last-child{margin-bottom:0;}
+  .acct .hd{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .acct .nm{font-size:14px; font-weight:800;}
+  .holding{display:flex; align-items:center; gap:9px; padding:7px 0; border-top:1px solid var(--border);}
+  .holding .sym{width:54px; font-weight:800; font-size:13px;}
+  .bar{flex:1; height:7px; background:var(--dim); border-radius:6px; overflow:hidden;}
+  .bar > i{display:block; height:100%; background:var(--limeDim); border-radius:6px;}
+  .holding .v{width:62px; text-align:right; font-size:12px; font-weight:700;}
+  .holding .pl{width:52px; text-align:right; font-size:11px; font-weight:700;}
+
+  .alert{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.45; padding:9px 0; border-top:1px solid var(--border);}
+  .alert:first-child{border-top:none;}
+  .alert .ic{font-size:15px; line-height:1.2;}
+
+  /* tasks */
+  .progress{height:8px; background:var(--dim); border-radius:6px; overflow:hidden; margin:10px 0 4px;}
+  .progress > i{display:block; height:100%; background:var(--lime); transition:width .25s;}
+  .tcat{font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); font-weight:800; margin:14px 2px 6px;}
+  .task{display:flex; gap:11px; align-items:flex-start; padding:11px 12px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:8px;}
+  .task.done{opacity:.5;}
+  .ck{flex:0 0 22px; height:22px; border-radius:7px; border:2px solid var(--dim); margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--bg); font-weight:900;}
+  .task.done .ck{background:var(--lime); border-color:var(--lime);}
+  .task .txt{flex:1; font-size:14px; line-height:1.4; font-weight:600;}
+  .task.done .txt{text-decoration:line-through;}
+  .del{color:var(--dim); background:none; border:none; font-size:18px; font-weight:700; padding:0 2px; line-height:1;}
+  .addrow{display:flex; gap:8px; margin-top:6px;}
+  .addrow input{flex:1; background:var(--cardAlt); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:11px; font-size:14px; outline:none;}
+  .addrow input::placeholder{color:var(--muted);}
+  .addrow button, .btn{background:var(--lime); color:#0a0d07; border:none; border-radius:10px; padding:0 16px; font-weight:800; font-size:14px;}
+  .btn.ghost{background:none; border:1px solid var(--border); color:var(--muted); padding:10px 14px;}
+
+  /* quick links */
+  .links{display:grid; grid-template-columns:repeat(4,1fr); gap:9px;}
+  .link{display:flex; flex-direction:column; align-items:center; gap:5px; background:var(--cardAlt); border:1px solid var(--border); border-radius:13px; padding:11px 4px; text-decoration:none; color:var(--text);}
+  .link .e{font-size:21px;} .link .l{font-size:10px; font-weight:700; color:var(--muted);}
+
+  /* bottom nav */
+  .nav{position:fixed; left:0; right:0; bottom:0; background:rgba(12,14,10,.94); backdrop-filter:blur(10px); border-top:1px solid var(--border); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));}
+  .nav button{flex:1; background:none; border:none; color:var(--muted); font-size:10px; font-weight:800; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px;}
+  .nav button .e{font-size:20px;}
+  .nav button.active{color:var(--lime);}
+
+  .foot{font-size:10.5px; color:var(--muted); text-align:center; line-height:1.5; padding:10px 6px 18px;}
+  .tapnote{font-size:10.5px; color:var(--muted); margin-top:8px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1 id="greet">Command <span class="accent">Center</span></h1>
+    <div class="date" id="today"></div>
+  </div>
+
+  <!-- ───────── TODAY ───────── -->
+  <section class="view active" id="v-today">
+    <div class="card nw" onclick="go('money')">
+      <div class="label">Net Worth · Investments</div>
+      <div class="big" id="nwTotal">$0</div>
+      <div style="margin-top:6px;" id="nwPill"></div>
+      <div class="tapnote" style="text-align:left;margin-top:10px;">Tap for the full breakdown →</div>
+    </div>
+
+    <div class="card lane">
+      <div class="row"><div class="label">This Month · One Lane</div>
+        <button class="editbtn" onclick="editLane()">edit</button></div>
+      <div class="body" id="laneBody"></div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="label">Next Up</div>
+        <button class="editbtn" onclick="go('tasks')">all tasks →</button></div>
+      <div id="nextUp"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Quick Open</div>
+      <div class="links">
+        <a class="link" href="https://robinhood.com" target="_blank"><span class="e">📈</span><span class="l">Robinhood</span></a>
+        <a class="link" href="https://www.etsy.com/your/shops/me/dashboard" target="_blank"><span class="e">🛒</span><span class="l">Etsy</span></a>
+        <a class="link" href="https://www.pinterest.com/business/hub/" target="_blank"><span class="e">📌</span><span class="l">Pinterest</span></a>
+        <a class="link" href="https://mail.google.com" target="_blank"><span class="e">✉️</span><span class="l">Gmail</span></a>
+        <a class="link" href="https://drive.google.com" target="_blank"><span class="e">📁</span><span class="l">Drive</span></a>
+        <a class="link" href="https://dashboard.stripe.com" target="_blank"><span class="e">💳</span><span class="l">Stripe</span></a>
+        <a class="link" href="https://calendar.google.com" target="_blank"><span class="e">📅</span><span class="l">Calendar</span></a>
+        <a class="link" href="#" onclick="resetSeed();return false;"><span class="e">↺</span><span class="l">Reset</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── MONEY ───────── -->
+  <section class="view" id="v-money">
+    <div class="card nw">
+      <div class="label">Total Portfolio</div>
+      <div class="big" id="mTotal">$0</div>
+      <div style="margin-top:6px;" id="mPill"></div>
+      <div class="sub" id="mAsOf" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">⚠︎ Risk Watch</div>
+      <div id="alerts"></div>
+    </div>
+
+    <div class="card" id="acctCard">
+      <div class="row"><div class="label">Accounts &amp; Holdings</div>
+        <button class="editbtn" onclick="toggleEdit()" id="editLbl">edit values</button></div>
+      <div id="accounts"></div>
+      <div class="tapnote">Snapshot — not live. Tap “edit values” to update after you check Robinhood.</div>
+    </div>
+  </section>
+
+  <!-- ───────── TASKS ───────── -->
+  <section class="view" id="v-tasks">
+    <div class="card">
+      <div class="row"><div class="label">Progress</div><div class="sub" id="taskCount"></div></div>
+      <div class="progress"><i id="taskBar"></i></div>
+    </div>
+    <div id="taskList"></div>
+    <div class="card alt">
+      <div class="label">Add a task</div>
+      <div class="addrow">
+        <input id="newTask" placeholder="What needs doing?" />
+        <button onclick="addTask()">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    Built as your private command center · all edits stay on this device (local storage).<br/>
+    Money figures are a manual snapshot, not a live brokerage feed.
+  </div>
+</div>
+
+<nav class="nav">
+  <button data-v="today" class="active" onclick="go('today')"><span class="e">🎯</span>Today</button>
+  <button data-v="money" onclick="go('money')"><span class="e">💰</span>Money</button>
+  <button data-v="tasks" onclick="go('tasks')"><span class="e">✅</span>Tasks</button>
+</nav>
+
+<script>
+"use strict";
+var KEY = "command_center_v1";
+
+// ---- seed data (TEMPLATE — empty by design) ----
+// This is the public/repo version with no personal data. On first run it
+// shows example placeholders; everything is editable and saved per-device
+// in local storage. Replace the examples with your own holdings and tasks.
+function seed(){
+  return {
+    lane: "Pick one lane this month — your single most important focus. Tap “edit” to set it.",
+    asOf: new Date().toISOString().slice(0,10),
+    edit: false,
+    accounts: [
+      { name:"Brokerage (example)", holdings:[
+        {sym:"VOO", value:1000, pl:0},
+        {sym:"AAPL", value:500,  pl:0}
+      ]}
+    ],
+    tasks: [
+      {id:"x1", cat:"📝 My tasks", txt:"Tap “edit values” on Money to add your real holdings", done:false},
+      {id:"x2", cat:"📝 My tasks", txt:"Add your own tasks below — check them off as you go", done:false}
+    ]
+  };
+}
+
+var state = load();
+function load(){
+  try{ var s = JSON.parse(localStorage.getItem(KEY)); if(s && s.tasks) return s; }catch(e){}
+  return seed();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function resetSeed(){ if(confirm("Reset everything to the original snapshot? Your edits will be lost.")){ state = seed(); save(); renderAll(); } }
+
+function fmt(n){ return "$" + Math.round(n).toLocaleString(); }
+function signed(n){ return (n>=0?"+":"−") + "$" + Math.abs(Math.round(n)).toLocaleString(); }
+
+function totals(){
+  var val=0, cost=0;
+  state.accounts.forEach(function(a){ a.holdings.forEach(function(h){ val+=h.value; cost+=(h.value-h.pl); }); });
+  var pl = val-cost; var pct = cost>0 ? pl/cost*100 : 0;
+  return {val:val, cost:cost, pl:pl, pct:pct};
+}
+
+function pill(pl, pct){
+  var cls = pl>=0 ? "pos" : "neg";
+  return '<span class="pill '+cls+'"><span class="'+cls+'">'+signed(pl)+'  ('+(pl>=0?"+":"")+pct.toFixed(1)+'%)</span></span>';
+}
+
+function renderHeader(){
+  var t = totals();
+  document.getElementById("nwTotal").textContent = fmt(t.val);
+  document.getElementById("nwPill").innerHTML = pill(t.pl, t.pct);
+  document.getElementById("mTotal").textContent = fmt(t.val);
+  document.getElementById("mPill").innerHTML = pill(t.pl, t.pct) + ' <span class="sub">unrealized</span>';
+  document.getElementById("mAsOf").textContent = "Snapshot as of " + state.asOf;
+}
+
+function renderLane(){ document.getElementById("laneBody").textContent = state.lane; }
+function editLane(){ var v = prompt("Your one lane this month:", state.lane); if(v!=null){ state.lane=v.trim()||state.lane; save(); renderLane(); } }
+
+function renderAccounts(){
+  var grand = totals().val;
+  var html = "";
+  state.accounts.forEach(function(a, ai){
+    var atot = a.holdings.reduce(function(s,h){return s+h.value;},0);
+    var apl = a.holdings.reduce(function(s,h){return s+h.pl;},0);
+    var acost = atot-apl; var apct = acost>0?apl/acost*100:0;
+    html += '<div class="acct"><div class="hd"><div class="nm">'+a.name+'</div>'+
+            '<div class="sub">'+fmt(atot)+' · <span class="'+(apl>=0?"pos":"neg")+'">'+(apl>=0?"+":"")+apct.toFixed(0)+'%</span></div></div>';
+    var sorted = a.holdings.slice().sort(function(x,y){return y.value-x.value;});
+    sorted.forEach(function(h){
+      var w = atot>0 ? (h.value/atot*100) : 0;
+      var plcls = h.pl>0?"pos":(h.pl<0?"neg":"sub");
+      var vCell = state.edit
+        ? '<span class="v" style="text-decoration:underline" onclick="editVal('+ai+',\''+h.sym+'\')">'+fmt(h.value)+'</span>'
+        : '<span class="v">'+fmt(h.value)+'</span>';
+      html += '<div class="holding"><span class="sym">'+h.sym+'</span>'+
+              '<span class="bar"><i style="width:'+w.toFixed(0)+'%"></i></span>'+
+              vCell+
+              '<span class="pl '+plcls+'">'+(h.pl>=0?"+":"−")+Math.abs(Math.round(h.pl))+'</span></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById("accounts").innerHTML = html;
+}
+function toggleEdit(){ state.edit=!state.edit; document.getElementById("editLbl").textContent = state.edit?"done":"edit values"; renderAccounts(); }
+function editVal(ai, sym){
+  var h = state.accounts[ai].holdings.filter(function(x){return x.sym===sym;})[0]; if(!h) return;
+  var v = prompt("Current value of "+sym+" ($):", Math.round(h.value));
+  if(v!=null && v!==""){ var n=parseFloat(v.replace(/[^0-9.\-]/g,"")); if(!isNaN(n)) h.value=n; save(); renderHeader(); renderAccounts(); renderAlerts(); }
+}
+
+function renderAlerts(){
+  var t = totals(); var grand=t.val; var items=[];
+  // single-holding concentration across whole portfolio
+  var biggest=null;
+  state.accounts.forEach(function(a){a.holdings.forEach(function(h){ if(!biggest||h.value>biggest.value) biggest={sym:h.sym,value:h.value};});});
+  if(biggest && grand>0){
+    var share=biggest.value/grand*100;
+    if(share>=20) items.push({ic:"🎯",t:"<b>"+biggest.sym+"</b> is "+share.toFixed(0)+"% of your entire portfolio ("+fmt(biggest.value)+"). One name carrying this much is your biggest single risk — decide if it's conviction or just an un-trimmed winner."});
+  }
+  // tech tilt note
+  items.push({ic:"⚖️",t:"Heavy <b>tech/growth tilt</b> across all accounts (semis, software, mega-cap). Little non-tech ballast — they'll mostly fall together in a tech selloff."});
+  // losers
+  var losers=[];
+  state.accounts.forEach(function(a){a.holdings.forEach(function(h){ var cost=h.value-h.pl; if(cost>0 && h.pl/cost<=-0.25) losers.push(h.sym);});});
+  if(losers.length) items.push({ic:"📉",t:"Down >25%: <b>"+losers.join(", ")+"</b>. Small positions — candidates for tax-loss harvesting if held in a taxable account."});
+  items.push({ic:"✅",t:"Tip: keep your biggest winners in tax-advantaged accounts (Roth / IRA) so the gains compound tax-free."});
+
+  document.getElementById("alerts").innerHTML = items.map(function(i){
+    return '<div class="alert"><span class="ic">'+i.ic+'</span><span>'+i.t+'</span></div>';
+  }).join("");
+}
+
+function renderTasks(){
+  var byCat={}; var order=[];
+  state.tasks.forEach(function(t){ if(!byCat[t.cat]){byCat[t.cat]=[];order.push(t.cat);} byCat[t.cat].push(t); });
+  var html="";
+  order.forEach(function(cat){
+    html += '<div class="tcat">'+cat+'</div>';
+    byCat[cat].forEach(function(t){
+      html += '<div class="task'+(t.done?" done":"")+'">'+
+        '<div class="ck" onclick="toggleTask(\''+t.id+'\')">'+(t.done?"✓":"")+'</div>'+
+        '<div class="txt" onclick="toggleTask(\''+t.id+'\')">'+t.txt+'</div>'+
+        '<button class="del" onclick="delTask(\''+t.id+'\')">×</button></div>';
+    });
+  });
+  document.getElementById("taskList").innerHTML = html;
+  var done = state.tasks.filter(function(t){return t.done;}).length;
+  var tot = state.tasks.length;
+  document.getElementById("taskCount").textContent = done+" / "+tot+" done";
+  document.getElementById("taskBar").style.width = (tot? done/tot*100:0)+"%";
+  // next up = first 3 not-done
+  var next = state.tasks.filter(function(t){return !t.done;}).slice(0,3);
+  document.getElementById("nextUp").innerHTML = next.length
+    ? next.map(function(t){return '<div class="alert"><span class="ic">▸</span><span>'+t.txt+'</span></div>';}).join("")
+    : '<div class="sub">All clear. Nice. 🎉</div>';
+}
+function toggleTask(id){ state.tasks.forEach(function(t){ if(t.id===id) t.done=!t.done; }); save(); renderTasks(); }
+function delTask(id){ state.tasks = state.tasks.filter(function(t){return t.id!==id;}); save(); renderTasks(); }
+function addTask(){
+  var el=document.getElementById("newTask"); var v=el.value.trim(); if(!v) return;
+  state.tasks.push({id:"u"+Date.now(), cat:"📝 My tasks", txt:v, done:false});
+  el.value=""; save(); renderTasks();
+}
+document.addEventListener("keydown",function(e){ if(e.key==="Enter" && document.activeElement && document.activeElement.id==="newTask") addTask(); });
+
+function go(v){
+  document.querySelectorAll(".view").forEach(function(el){el.classList.remove("active");});
+  document.getElementById("v-"+v).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-v")===v); });
+  window.scrollTo(0,0);
+}
+
+function renderAll(){ renderHeader(); renderLane(); renderAccounts(); renderAlerts(); renderTasks(); }
+
+(function init(){
+  var d = new Date();
+  document.getElementById("today").textContent = d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  var h = d.getHours();
+  document.getElementById("greet").innerHTML = "Command <span class='accent'>Center</span>";
+  renderAll();
+})();
+</script>
+</body>
+</html>
