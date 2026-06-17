@@ -7,7 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { -webkit-text-size-adjust: 100%; }
     body { background: #0C0E0A; font-family: 'Inter', sans-serif; }
+    img { max-width: 100%; }
+    /* Mobile: collapse cramped multi-column input grids and let the header wrap */
+    @media (max-width: 560px) {
+      .fiq-2col { grid-template-columns: 1fr !important; }
+      .fiq-header { height: auto !important; flex-wrap: wrap; row-gap: 6px; padding: 8px 16px !important; }
+    }
   </style>
 </head>
 <body>
@@ -465,6 +472,7 @@ const { useState, useRef, useEffect } = React;
         outline: "none"
       }
     }), /*#__PURE__*/React.createElement("div", {
+      className: "fiq-2col",
       style: {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
@@ -1149,6 +1157,7 @@ const { useState, useRef, useEffect } = React;
         onClick: () => setFinancing(k)
       }, v);
     })), financing !== "cash" && /*#__PURE__*/React.createElement("div", {
+      className: "fiq-2col",
       style: {
         marginTop: 14,
         display: "grid",
@@ -2249,6 +2258,7 @@ const { useState, useRef, useEffect } = React;
         gap: 20
       }
     }, /*#__PURE__*/React.createElement("div", {
+      className: "fiq-2col",
       style: {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
@@ -2478,7 +2488,8 @@ const { useState, useRef, useEffect } = React;
         alignItems: "center",
         justifyContent: "space-between",
         height: 56
-      }
+      },
+      className: "fiq-header"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
