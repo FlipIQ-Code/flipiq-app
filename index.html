@@ -112,6 +112,7 @@ const { useState, useRef, useEffect } = React;
       onChange: e => onChange(Number(e.target.value)),
       style: {
         flex: 1,
+        minWidth: 0,
         background: "none",
         border: "none",
         outline: "none",
@@ -247,7 +248,12 @@ const { useState, useRef, useEffect } = React;
       setValues = _useState2[1];
     const total = Object.values(values).reduce((a, b) => a + b, 0);
     const cats = ["Systems", "Rooms"];
+    const rootRef = useRef(null);
+    useEffect(() => {
+      rootRef.current && rootRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, []);
     return /*#__PURE__*/React.createElement("div", {
+      ref: rootRef,
       style: {
         background: C.card,
         border: "1px solid ".concat(C.lime, "40"),
@@ -408,7 +414,12 @@ const { useState, useRef, useEffect } = React;
     const confidence = filled.length >= 3 ? "High" : filled.length === 2 ? "Medium" : filled.length === 1 ? "Low" : "—";
     const confColor = confidence === "High" ? C.lime : confidence === "Medium" ? C.orange : C.red;
     const arvCheck = avg > 0 ? arv > high ? "too high" : arv < low ? "too low" : "within range" : null;
+    const rootRef = useRef(null);
+    useEffect(() => {
+      rootRef.current && rootRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, []);
     return /*#__PURE__*/React.createElement("div", {
+      ref: rootRef,
       style: {
         background: C.card,
         border: "1px solid ".concat(C.orange, "40"),
@@ -507,6 +518,7 @@ const { useState, useRef, useEffect } = React;
       }) : x)),
       style: {
         flex: 1,
+        minWidth: 0,
         background: "none",
         border: "none",
         outline: "none",
@@ -1006,6 +1018,7 @@ const { useState, useRef, useEffect } = React;
       onChange: e => setArv(Number(e.target.value)),
       style: {
         flex: 1,
+        minWidth: 0,
         background: "none",
         border: "none",
         outline: "none",
@@ -1077,6 +1090,7 @@ const { useState, useRef, useEffect } = React;
       onChange: e => setRehab(Number(e.target.value)),
       style: {
         flex: 1,
+        minWidth: 0,
         background: "none",
         border: "none",
         outline: "none",
@@ -2072,6 +2086,7 @@ const { useState, useRef, useEffect } = React;
     }, "AI Flip Advisor")), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
+        minWidth: 0,
         overflowY: "auto",
         padding: 16,
         display: "flex",
@@ -2146,6 +2161,7 @@ const { useState, useRef, useEffect } = React;
       placeholder: "Ask anything about flipping...",
       style: {
         flex: 1,
+        minWidth: 0,
         background: C.cardAlt,
         border: "1px solid ".concat(C.border),
         borderRadius: 10,
@@ -2322,6 +2338,7 @@ const { useState, useRef, useEffect } = React;
         onChange: e => update(i, f, +e.target.value),
         style: {
           flex: 1,
+          minWidth: 0,
           background: "none",
           border: "none",
           outline: "none",
