@@ -34,12 +34,17 @@ If either is still pending, stop here. Everything below assumes both are done.
 - [ ] `og:image` → point at the new logo so link previews look right
 
 ## 3. Connect the domain to Vercel  *(~5 min + DNS wait)*
-- [ ] In **Vercel → your project → Settings → Domains**, add your new domain (apex + `www`)
+
+**Domains owned:** `lucaelos.com` (primary product site) and
+`lucaelosholdings.com` (business/holding — park or redirect to the product).
+
+- [ ] In **Vercel → your project → Settings → Domains**, add **`lucaelos.com`** (apex + `www`)
 - [ ] Vercel will show the **DNS records** to add — typically:
   - Apex (`lucaelos.com`): an **A record** to Vercel's IP
   - `www`: a **CNAME** to `cname.vercel-dns.com`
-- [ ] Add those records at your **registrar** (where you bought the domains last weekend)
+- [ ] Add those records at your **registrar** (where you bought the domains)
 - [ ] Set the apex ↔ `www` redirect (pick one as primary)
+- [ ] (Optional) Add **`lucaelosholdings.com`** too and set it to redirect to `lucaelos.com`
 - [ ] Wait for DNS to propagate (minutes to a couple hours) — Vercel auto-issues HTTPS
 
 ## 4. Turn on the funnel  *(optional, ~10 min — see SETUP.md)*
@@ -62,7 +67,7 @@ If either is still pending, stop here. Everything below assumes both are done.
 ---
 
 ### Where things stand today
-- ✅ Domains purchased
+- ✅ Domains purchased: `lucaelos.com` (product) + `lucaelosholdings.com` (business)
 - ⏳ Name `LUCAELOS` — awaiting lawyer clearance
 - ⏳ Logo — designed, in validation
 - 🅿️ Code rebrand — parked until the two green lights above
