@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
   // Build Anthropic request
   const anthropicBody = {
-    model: model || "claude-sonnet-4-20250514",
+    model: model || "claude-sonnet-4-6",
     max_tokens: Math.min(max_tokens || 800, 1500), // cap at 1500 to control costs
     messages,
   };
