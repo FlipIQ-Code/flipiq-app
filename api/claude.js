@@ -1,6 +1,13 @@
 // FlipIQ™ — Anthropic API Proxy
 // Keeps the API key server-side and adds basic rate limiting.
 
+// Allow the Anthropic call up to 60s to finish. Vercel's default function
+// timeout can be as low as 10s, which cut off slower completions — the browser
+// then received a non-JSON gateway error and surfaced it as "Connection error".
+export const config = {
+  maxDuration: 60,
+};
+
 // In-memory rate limit store (resets on cold start, good enough for serverless)
 // Limit: 10 AI requests per IP per hour
 const rateLimitStore = new Map();
