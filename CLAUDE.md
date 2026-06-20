@@ -101,7 +101,7 @@ files or class-based styling.
   only, and `InlineDisclaimer` reinforces this in the UI. Preserve these
   disclaimers when touching prompts or feature components.
 - Keep model selection and token caps consistent with the proxy: the proxy
-  defaults to `claude-sonnet-4-20250514` and hard-caps `max_tokens` at 1500.
+  defaults to `claude-sonnet-4-6` and hard-caps `max_tokens` at 1500.
 
 ## Git workflow
 
