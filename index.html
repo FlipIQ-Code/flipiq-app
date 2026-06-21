@@ -3,7 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlipIQ™ — AI Deal Analyzer</title>
+  <title>FlipIQ™ — AI Deal Analyzer for House Flippers</title>
+
+  <!-- SEO -->
+  <meta name="description" content="FlipIQ™ is an AI-powered house-flipping deal analyzer. Instantly score any flip, estimate profit and ROI, calculate your max offer with the 70% rule, and get AI advice. Veteran-owned." />
+  <meta name="keywords" content="house flipping, real estate investing, deal analyzer, ARV calculator, 70% rule, rehab estimate, fix and flip, ROI calculator, BRRRR, wholesaling" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://flipiq.app/" />
+
+  <!-- Open Graph (Facebook / LinkedIn / iMessage) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="FlipIQ™ — AI Deal Analyzer for House Flippers" />
+  <meta property="og:description" content="Instantly score any flip, estimate profit & ROI, calculate your max offer, and get AI deal advice. Veteran-owned." />
+  <meta property="og:url" content="https://flipiq.app/" />
+  <meta property="og:site_name" content="FlipIQ" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="FlipIQ™ — AI Deal Analyzer for House Flippers" />
+  <meta name="twitter:description" content="Instantly score any flip, estimate profit & ROI, calculate your max offer, and get AI deal advice. Veteran-owned." />
+
+  <!-- Analytics (Google Analytics 4) — paste your free Measurement ID below to turn on.
+       Get one at analytics.google.com (Admin -> Data Streams -> Web). Leave blank to disable. -->
+  <script>window.FLIPIQ_GA_ID = "";</script>
+  <script>
+    (function () {
+      var id = window.FLIPIQ_GA_ID;
+      if (!id) return;
+      var s = document.createElement("script");
+      s.async = true;
+      s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag("js", new Date());
+      gtag("config", id);
+    })();
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,6 +61,115 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <!-- FlipIQ lead capture + analytics helpers (framework-agnostic) -->
+  <script>
+  (function () {
+    // Lightweight analytics passthrough — safe whether or not GA is configured.
+    window.flipiqTrack = function (event, params) {
+      try { if (window.gtag) window.gtag("event", event, params || {}); } catch (e) {}
+    };
+
+    var LEAD_KEY = "flipiq_lead_captured";
+    function alreadyCaptured() {
+      try { return !!localStorage.getItem(LEAD_KEY); } catch (e) { return false; }
+    }
+    function markCaptured(email) {
+      try { localStorage.setItem(LEAD_KEY, email || "1"); } catch (e) {}
+    }
+    function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    var C = { bg: "#0C0E0A", card: "#131510", border: "#252820", lime: "#AAFF3A", text: "#E8EDF0", muted: "#6B7A5A", red: "#FF3A3A" };
+
+    // Build the modal once, lazily.
+    var overlay, input, errorEl, submitBtn, pending = null;
+    function buildModal() {
+      overlay = document.createElement("div");
+      overlay.style.cssText = "position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:20px;font-family:'Inter',sans-serif;";
+
+      var box = document.createElement("div");
+      box.style.cssText = "background:" + C.card + ";border:1px solid " + C.border + ";border-radius:16px;max-width:420px;width:100%;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);";
+
+      var h = document.createElement("div");
+      h.textContent = "Get your free deal report";
+      h.style.cssText = "color:" + C.text + ";font-size:20px;font-weight:800;margin-bottom:8px;";
+
+      var p = document.createElement("div");
+      p.textContent = "Enter your email and we'll unlock your downloadable FlipIQ™ report — plus occasional deal tips for flippers. No spam.";
+      p.style.cssText = "color:" + C.muted + ";font-size:13px;line-height:1.6;margin-bottom:18px;";
+
+      input = document.createElement("input");
+      input.type = "email";
+      input.placeholder = "you@example.com";
+      input.style.cssText = "width:100%;background:" + C.bg + ";border:1px solid " + C.border + ";border-radius:10px;padding:13px 14px;color:" + C.text + ";font-size:15px;outline:none;margin-bottom:6px;";
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+
+      errorEl = document.createElement("div");
+      errorEl.style.cssText = "color:" + C.red + ";font-size:12px;min-height:16px;margin-bottom:10px;font-weight:600;";
+
+      submitBtn = document.createElement("button");
+      submitBtn.textContent = "Get my report";
+      submitBtn.style.cssText = "width:100%;background:" + C.lime + ";color:#0C0E0A;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:800;cursor:pointer;";
+      submitBtn.addEventListener("click", submit);
+
+      var skip = document.createElement("button");
+      skip.textContent = "No thanks";
+      skip.style.cssText = "width:100%;background:transparent;color:" + C.muted + ";border:none;padding:12px;font-size:12px;cursor:pointer;margin-top:6px;";
+      skip.addEventListener("click", function () { close(); proceed(); });
+
+      var disc = document.createElement("div");
+      disc.textContent = "FlipIQ™ is an estimation tool. For informational purposes only — not financial, legal, or investment advice.";
+      disc.style.cssText = "color:" + C.muted + ";font-size:10px;line-height:1.5;margin-top:14px;opacity:.7;";
+
+      box.appendChild(h); box.appendChild(p); box.appendChild(input);
+      box.appendChild(errorEl); box.appendChild(submitBtn); box.appendChild(skip); box.appendChild(disc);
+      overlay.appendChild(box);
+      overlay.addEventListener("click", function (e) { if (e.target === overlay) { close(); } });
+      document.body.appendChild(overlay);
+    }
+
+    function open() {
+      if (!overlay) buildModal();
+      errorEl.textContent = "";
+      input.value = "";
+      overlay.style.display = "flex";
+      setTimeout(function () { input.focus(); }, 50);
+    }
+    function close() { if (overlay) overlay.style.display = "none"; }
+    function proceed() { var fn = pending; pending = null; if (typeof fn === "function") fn(); }
+
+    function submit() {
+      var email = (input.value || "").trim();
+      if (!validEmail(email)) { errorEl.textContent = "Please enter a valid email address."; return; }
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+      markCaptured(email);
+      window.flipiqTrack("lead_captured", { source: window._flipiqLeadSource || "report" });
+      try {
+        fetch("/api/lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({ email: email, source: window._flipiqLeadSource || "report" })
+        }).catch(function () {});
+      } catch (e) {}
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Get my report";
+      close();
+      proceed();
+    }
+
+    // Public API: gate an action behind an email. If already captured, runs immediately.
+    window.flipiqLeadGate = function (opts) {
+      opts = opts || {};
+      window._flipiqLeadSource = opts.source || "report";
+      if (alreadyCaptured()) { if (typeof opts.onProceed === "function") opts.onProceed(); return; }
+      pending = opts.onProceed;
+      open();
+    };
+  })();
+  </script>
+
   <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script>
@@ -795,6 +941,7 @@ const { useState, useRef, useEffect } = React;
       ;
     };
     const exportText = () => {
+      const doExport = () => {
       const txt = "FLIPIQ™ DEAL REPORT\n".concat("=".repeat(40), "\n").concat(dealName || "Deal Analysis", "\nDate: ").concat(new Date().toLocaleDateString(), "\n\nDEAL SCORE: ").concat(score, "/100 \u2014 ").concat(verdict, "\n\nNUMBERS\nPurchase Price: ").concat(fmt(purchase), "\nARV: ").concat(fmt(arv), "\nRehab Budget: ").concat(fmt(rehab), "\nHold Time: ").concat(months, " months\nFinancing: ").concat(financing, "\n\nRESULTS\nNet Profit: ").concat(fmt(Math.round(profit)), "\nROI: ").concat(pct(roi), "\nMAO (70% Rule): ").concat(fmt(Math.round(mao)), "\nAll-In Cost: ").concat(fmt(Math.round(allIn)), "\n\n").concat("=".repeat(40), "\nDISCLAIMER: Results are estimates only. Not financial, legal, or investment advice. Always consult a licensed professional.\nPowered by FlipIQ\u2122 \u2014 Veteran-Owned \uD83C\uDDFA\uD83C\uDDF8");
       const blob = new Blob([txt], {
         type: "text/plain"
@@ -803,6 +950,13 @@ const { useState, useRef, useEffect } = React;
       a.href = URL.createObjectURL(blob);
       a.download = "flipiq-".concat((dealName || "deal").replace(/\s+/g, "-"), ".txt");
       a.click();
+      if (window.flipiqTrack) window.flipiqTrack("report_download", { deal: dealName || "deal" });
+      };
+      if (window.flipiqLeadGate) {
+        window.flipiqLeadGate({ source: "report_download", onProceed: doExport });
+      } else {
+        doExport();
+      }
     };
     const shareDeal = () => {
       const text = "FlipIQ™ Deal Report\n".concat(dealName || "Deal Analysis", "\nScore: ").concat(score, "/100 \u2014 ").concat(verdict, "\nProfit: ").concat(fmt(Math.round(profit)), " | ROI: ").concat(pct(roi), "\nPowered by FlipIQ\u2122");
