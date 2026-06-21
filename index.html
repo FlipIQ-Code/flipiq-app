@@ -57,6 +57,40 @@ const { useState, useRef, useEffect } = React;
   };
   const fmt = n => "$".concat(Number(n).toLocaleString());
   const pct = n => isNaN(n) || !isFinite(n) ? "0.0%" : "".concat(Number(n).toFixed(1), "%");
+  // ─── DEAL MATH — single source of truth ─────────────────────────────
+  // The core flip economics live here ONLY. DealAnalyzer and DealCompare
+  // both call this so their numbers can never drift apart. `financing`,
+  // `downPct`, and `loanRate` are optional and default to all-cash.
+  const computeDeal = d => {
+    const purchase = Number(d.purchase) || 0;
+    const arv = Number(d.arv) || 0;
+    const rehab = Number(d.rehab) || 0;
+    const months = Number(d.months) || 0;
+    const financing = d.financing || "cash";
+    const downPct = d.downPct != null ? Number(d.downPct) : 100;
+    const loanRate = d.loanRate != null ? Number(d.loanRate) : 0;
+    const closingBuy = purchase * 0.02;
+    const closingSell = arv * 0.08;
+    const holdingBase = purchase * 0.006 * months;
+    const loanAmount = financing !== "cash" ? purchase * (1 - downPct / 100) : 0;
+    const monthlyInterest = financing !== "cash" ? loanAmount * (loanRate / 100 / 12) : 0;
+    const holdingFinance = financing !== "cash" ? monthlyInterest * months : 0;
+    const holding = holdingBase + holdingFinance;
+    const cashRequired = financing !== "cash" ? purchase * (downPct / 100) + rehab + closingBuy : purchase + rehab + closingBuy;
+    const allIn = purchase + rehab + closingBuy + closingSell + holding;
+    const profit = arv - allIn;
+    const roi = allIn > 0 ? profit / allIn * 100 : 0;
+    const cocRoi = financing !== "cash" && cashRequired > 0 ? profit / cashRequired * 100 : null;
+    const mao = arv * 0.70 - rehab;
+    const arvInvalid = arv <= purchase;
+    const score = arvInvalid ? 0 : Math.min(100, Math.max(0, Math.round((roi > 20 ? 40 : roi > 10 ? 25 : 10) + (purchase <= mao ? 40 : purchase <= mao * 1.1 ? 20 : 0) + (profit > 50000 ? 20 : profit > 25000 ? 10 : 0))));
+    const verdict = score >= 70 ? "STRONG BUY" : score >= 45 ? "CAUTION" : "PASS";
+    return {
+      closingBuy, closingSell, holdingBase, loanAmount, monthlyInterest,
+      holdingFinance, holding, cashRequired, allIn, profit, roi, cocRoi,
+      mao, arvInvalid, score, verdict
+    };
+  };
   function Chip(_ref) {
     let children = _ref.children,
       active = _ref.active,
@@ -707,22 +741,11 @@ const { useState, useRef, useEffect } = React;
       _useState34 = _slicedToArray(_useState33, 2),
       showHistory = _useState34[0],
       setShowHistory = _useState34[1];
-    const closingBuy = purchase * 0.02;
-    const closingSell = arv * 0.08;
-    const holdingBase = purchase * 0.006 * months;
-    const loanAmount = financing !== "cash" ? purchase * (1 - downPct / 100) : 0;
-    const monthlyInterest = financing !== "cash" ? loanAmount * (loanRate / 100 / 12) : 0;
-    const holdingFinance = financing !== "cash" ? monthlyInterest * months : 0;
-    const holding = holdingBase + holdingFinance;
-    const cashRequired = financing !== "cash" ? purchase * (downPct / 100) + rehab + closingBuy : purchase + rehab + closingBuy;
-    const allIn = purchase + rehab + closingBuy + closingSell + holding;
-    const profit = arv - allIn;
-    const roi = allIn > 0 ? profit / allIn * 100 : 0;
-    const cocRoi = financing !== "cash" && cashRequired > 0 ? profit / cashRequired * 100 : null;
-    const mao = arv * 0.70 - rehab;
-    const arvInvalid = arv <= purchase;
-    const score = arvInvalid ? 0 : Math.min(100, Math.max(0, Math.round((roi > 20 ? 40 : roi > 10 ? 25 : 10) + (purchase <= mao ? 40 : purchase <= mao * 1.1 ? 20 : 0) + (profit > 50000 ? 20 : profit > 25000 ? 10 : 0))));
-    const verdict = score >= 70 ? "STRONG BUY" : score >= 45 ? "CAUTION" : "PASS";
+    const {
+      closingBuy, closingSell, holdingBase, loanAmount, monthlyInterest,
+      holdingFinance, holding, cashRequired, allIn, profit, roi, cocRoi,
+      mao, arvInvalid, score, verdict
+    } = computeDeal({ purchase, arv, rehab, months, financing, downPct, loanRate });
     const vc = score >= 70 ? C.lime : score >= 45 ? C.orange : C.red;
     const runAI = async () => {
       setAiLoading(true);
@@ -2213,27 +2236,7 @@ const { useState, useRef, useEffect } = React;
       _useState54 = _slicedToArray(_useState53, 2),
       deals = _useState54[0],
       setDeals = _useState54[1];
-    const calc = d => {
-      const closingBuy = d.purchase * 0.02;
-      const closingSell = d.arv * 0.08;
-      const holding = d.purchase * 0.006 * d.months;
-      const allIn = d.purchase + d.rehab + closingBuy + closingSell + holding;
-      const profit = d.arv - allIn;
-      const roi = allIn > 0 ? profit / allIn * 100 : 0;
-      const mao = d.arv * 0.70 - d.rehab;
-      const score = Math.min(100, Math.max(0, Math.round((roi > 20 ? 40 : roi > 10 ? 25 : 10) + (d.purchase <= mao ? 40 : d.purchase <= mao * 1.1 ? 20 : 0) + (profit > 50000 ? 20 : profit > 25000 ? 10 : 0))));
-      const verdict = score >= 70 ? "STRONG BUY" : score >= 45 ? "CAUTION" : "PASS";
-      return {
-        profit,
-        roi,
-        mao,
-        score,
-        verdict,
-        allIn,
-        closingSell,
-        holding
-      };
-    };
+    const calc = computeDeal;
     const _deals$map = deals.map(calc),
       _deals$map2 = _slicedToArray(_deals$map, 2),
       a = _deals$map2[0],

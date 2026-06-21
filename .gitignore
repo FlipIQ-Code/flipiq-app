@@ -1,0 +1,38 @@
+# ── Secrets & environment ─────────────────────────────
+# Never commit API keys or local config. The Anthropic key lives in
+# Vercel's environment settings (process.env.ANTHROPIC_API_KEY), not here.
+.env
+.env.*
+*.local
+project-config.json
+config.local.json
+secrets.json
+
+# Credentials & keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+*.crt
+
+# ── Vercel / tooling ──────────────────────────────────
+.vercel
+.vercel.json.local
+
+# ── Dependencies (this project has none, but just in case) ─
+node_modules/
+package-lock.json
+yarn.lock
+
+# ── OS / editor noise ─────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ── Logs & temp ───────────────────────────────────────
+*.log
+npm-debug.log*
+tmp/
